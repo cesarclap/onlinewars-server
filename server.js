@@ -1,6 +1,7 @@
 const { WebSocketServer } = require('ws')
 
-const wss = new WebSocketServer({ port: 3001 })
+const PORT = process.env.PORT || 3001
+const wss = new WebSocketServer({ port: PORT })
 const rooms = {}
 
 wss.on('connection', (ws) => {
@@ -44,4 +45,4 @@ wss.on('connection', (ws) => {
   })
 })
 
-console.log('Signaling server running on port 3001')
+console.log(`Signaling server running on port ${PORT}`)
