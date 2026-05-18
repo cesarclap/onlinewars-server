@@ -1,17 +1,18 @@
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully')
-  server.close(() => {
-    process.exit(0)
-  })
+const { WebSocketServer } = require('ws')
+const http = require('http')
+
+const PORT = process.env.PORT || 8080
+
+const server = http.createServer((req, res) => {
+  res.writeHead(200)
+  res.end('OnlineWars signaling server running')
 })
 
-const { WebSocketServer } = require('ws')
-
-const PORT = process.env.PORT || 3001
-const wss = new WebSocketServer({ port: PORT })
+const wss = new WebSocketServer({ server })
 const rooms = {}
 
 wss.on('connection', (ws) => {
+  console.log('New connection')
   let currentRoom = null
 
   ws.on('message', (data) => {
@@ -52,4 +53,10 @@ wss.on('connection', (ws) => {
   })
 })
 
-console.log(`Signaling server running on port ${PORT}`)
+process.on('SIGTERM', () => {
+  server.close(() => process.exit(0))
+})
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Signaling server running on port ${PORT}`)
+})
