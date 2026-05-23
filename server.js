@@ -12,15 +12,16 @@ const wss = new WebSocketServer({ server })
 const rooms = {}
 
 wss.on('connection', (ws) => {
-  console.log('New connection')
   let currentRoom = null
+  let playerName = 'Player'
 
   ws.on('message', (data) => {
     const msg = JSON.parse(data)
 
     if (msg.type === 'create') {
       const code = Math.random().toString(36).substring(2, 8).toUpperCase()
-      rooms[code] = { host: ws, guest: null }
+      playerName = msg.name || 'Player'
+      rooms[code] = { host: ws, hostName: playerName, guest: null, guestName: null }
       currentRoom = code
       ws.send(JSON.stringify({ type: 'created', code }))
     }
@@ -29,10 +30,12 @@ wss.on('connection', (ws) => {
       const room = rooms[msg.code]
       if (!room) return ws.send(JSON.stringify({ type: 'error', msg: 'Room not found' }))
       if (room.guest) return ws.send(JSON.stringify({ type: 'error', msg: 'Room full' }))
+      playerName = msg.name || 'Player'
       room.guest = ws
+      room.guestName = playerName
       currentRoom = msg.code
-      ws.send(JSON.stringify({ type: 'joined', code: msg.code }))
-      room.host.send(JSON.stringify({ type: 'guest_joined' }))
+      ws.send(JSON.stringify({ type: 'joined', code: msg.code, hostName: room.hostName }))
+      room.host.send(JSON.stringify({ type: 'guest_joined', guestName: playerName }))
     }
 
     if (msg.type === 'signal') {
